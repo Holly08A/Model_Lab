@@ -89,22 +89,17 @@ The app lets you:
 
 ## Screenshots
 
-You can add repository screenshots under `docs/images/` and reference them here.
+### Setup
 
-Suggested sections:
-
-- `Setup` screen
-- `Workspace` prompt + model cards
-- `Dashboard` rankings
-- `Ratings` aggregated model view
-
-Example markdown:
-
-```md
 ![Setup screen](docs/images/setup.png)
+
+### Workspace
+
 ![Workspace screen](docs/images/workspace.png)
+
+### Ratings
+
 ![Ratings screen](docs/images/ratings.png)
-```
 
 ## Getting Started
 
