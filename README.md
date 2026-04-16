@@ -1,4 +1,4 @@
-# LLM Qualitative Comparator
+# Model Lab - LLM Qualitative Comparator
 
 A browser-based app for side-by-side LLM comparison with manual qualitative scoring.
 
@@ -75,17 +75,6 @@ The app lets you:
 - reopen saved runs
 - delete saved runs
 - unsaved-changes warning during review
-
-## Tech Stack
-
-- Next.js 15
-- React 19
-- TypeScript
-- Tailwind CSS
-- Zustand
-- Dexie / IndexedDB
-- React Hook Form
-- Zod
 
 ## Screenshots
 
@@ -194,7 +183,6 @@ src/
 ## Status
 
 The app currently supports the full browser-local comparison loop:
-
 - configure models
 - run comparisons
 - score responses
@@ -202,13 +190,7 @@ The app currently supports the full browser-local comparison loop:
 - save runs
 - review aggregated ratings
 
-Not implemented yet:
 
-- latency to first token
-- auth / multi-user mode
-- cloud sync
-- export to CSV or PDF
-- automated model-as-judge scoring
 
 ## Contributing
 
