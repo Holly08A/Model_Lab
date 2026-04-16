@@ -43,10 +43,10 @@ export function MetricsSection({
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Metrics</p>
           <h3 className="mt-2 text-xl font-semibold text-stone-900">
-            Choose up to five qualitative scoring dimensions
+            Choose the qualitative scoring dimensions you want to use
           </h3>
         </div>
-        <p className="text-sm text-stone-500">{selectedMetrics.length}/5 selected</p>
+        <p className="text-sm text-stone-500">{selectedMetrics.length} selected</p>
       </div>
 
       <div className="space-y-3">

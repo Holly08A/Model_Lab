@@ -6,6 +6,7 @@ import type { SavedRun } from "@/types";
 type SavedRunListProps = {
   items: SavedRun[];
   onOpen: (run: SavedRun) => void;
+  onReusePrompts: (run: SavedRun) => void;
   onDelete: (id: string) => void;
 };
 
@@ -21,7 +22,7 @@ function averageScore(run: SavedRun) {
   return `${(values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1)} / 10`;
 }
 
-export function SavedRunList({ items, onOpen, onDelete }: SavedRunListProps) {
+export function SavedRunList({ items, onOpen, onReusePrompts, onDelete }: SavedRunListProps) {
   return (
     <div className="space-y-4">
       {items.map((run) => (
@@ -39,7 +40,10 @@ export function SavedRunList({ items, onOpen, onDelete }: SavedRunListProps) {
                   {run.title}
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-stone-600">
-                  {run.prompt.length > 140 ? `${run.prompt.slice(0, 140)}...` : run.prompt}
+                  {(() => {
+                    const preview = run.userPrompt ?? run.prompt ?? "";
+                    return preview.length > 140 ? `${preview.slice(0, 140)}...` : preview;
+                  })()}
                 </p>
               </div>
               <div className="flex flex-wrap gap-3 text-sm text-stone-600">
@@ -55,6 +59,13 @@ export function SavedRunList({ items, onOpen, onDelete }: SavedRunListProps) {
                 type="button"
               >
                 Open in workspace
+              </button>
+              <button
+                className="rounded-full border border-stone-200 px-4 py-2 text-sm text-stone-700 transition hover:bg-stone-100"
+                onClick={() => onReusePrompts(run)}
+                type="button"
+              >
+                Reuse prompts
               </button>
               <button
                 className="rounded-full border border-stone-200 px-4 py-2 text-sm text-stone-700 transition hover:bg-stone-100"

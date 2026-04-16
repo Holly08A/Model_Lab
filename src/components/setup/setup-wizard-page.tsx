@@ -53,11 +53,6 @@ export function SetupWizardPage() {
   };
 
   const handleToggleMetric = (metric: MetricConfig) => {
-    if (!selectedMetrics.some((item) => item.id === metric.id) && selectedMetrics.length >= 5) {
-      setStatusMessage("You can select up to five metrics at a time.");
-      return;
-    }
-
     toggleMetric(metric);
     setStatusMessage(null);
   };

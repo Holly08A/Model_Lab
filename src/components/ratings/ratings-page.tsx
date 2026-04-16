@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { aggregateModelRatings } from "@/lib/scoring/aggregate-ratings";
 import { formatCurrency, formatDuration, formatNumber } from "@/lib/utils/format";
 import { useSavedRunsStore } from "@/stores/saved-runs-store";
@@ -15,12 +15,35 @@ function formatScore(value?: number) {
 
 export function RatingsPage() {
   const { items, loading, error, load } = useSavedRunsStore();
+  const [selectedTitles, setSelectedTitles] = useState<string[]>([]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const aggregates = useMemo(() => aggregateModelRatings(items), [items]);
+  const availableTitles = useMemo(
+    () =>
+      [...new Set(items.map((run) => run.title).filter((title): title is string => Boolean(title)))]
+        .sort((a, b) => a.localeCompare(b)),
+    [items],
+  );
+
+  const filteredRuns = useMemo(() => {
+    if (selectedTitles.length === 0) {
+      return items;
+    }
+
+    const selected = new Set(selectedTitles);
+    return items.filter((run) => run.title && selected.has(run.title));
+  }, [items, selectedTitles]);
+
+  const aggregates = useMemo(() => aggregateModelRatings(filteredRuns), [filteredRuns]);
+
+  const toggleTitle = (title: string) => {
+    setSelectedTitles((current) =>
+      current.includes(title) ? current.filter((item) => item !== title) : [...current, title],
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -35,6 +58,58 @@ export function RatingsPage() {
         </p>
       </section>
 
+      <section className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--card)] p-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Filter by test case</p>
+            <h3 className="mt-2 text-xl font-semibold text-stone-900">
+              Choose which saved test cases are included in the rating averages
+            </h3>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
+              Leave everything unselected to use all saved runs, or select one or more test case names such as
+              `Test A` or `Test A + Test B`.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-700">
+            {selectedTitles.length === 0
+              ? `Using all ${items.length} saved run${items.length === 1 ? "" : "s"}`
+              : `Using ${filteredRuns.length} selected run${filteredRuns.length === 1 ? "" : "s"}`}
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-3">
+          <button
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              selectedTitles.length === 0
+                ? "bg-[color:var(--accent)] text-white"
+                : "border border-stone-200 bg-stone-50 text-stone-700 hover:bg-white"
+            }`}
+            onClick={() => setSelectedTitles([])}
+            type="button"
+          >
+            All test cases
+          </button>
+          {availableTitles.map((title) => {
+            const isSelected = selectedTitles.includes(title);
+            const runCount = items.filter((run) => run.title === title).length;
+            return (
+              <button
+                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  isSelected
+                    ? "bg-[color:var(--accent)] text-white"
+                    : "border border-stone-200 bg-stone-50 text-stone-700 hover:bg-white"
+                }`}
+                key={title}
+                onClick={() => toggleTitle(title)}
+                type="button"
+              >
+                {title} ({runCount})
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       {loading ? (
         <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--card)] p-6 text-stone-600 shadow-sm">
           Loading aggregated ratings...
@@ -42,6 +117,10 @@ export function RatingsPage() {
       ) : error ? (
         <div className="rounded-[28px] border border-rose-200 bg-rose-50 p-6 text-rose-700 shadow-sm">
           {error}
+        </div>
+      ) : filteredRuns.length === 0 ? (
+        <div className="rounded-[28px] border border-dashed border-stone-300 bg-[color:var(--card)] p-8 text-sm leading-7 text-stone-600 shadow-sm">
+          No saved runs match the selected test case filter.
         </div>
       ) : aggregates.length === 0 ? (
         <div className="rounded-[28px] border border-dashed border-stone-300 bg-[color:var(--card)] p-8 text-sm leading-7 text-stone-600 shadow-sm">

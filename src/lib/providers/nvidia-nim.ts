@@ -36,7 +36,7 @@ function normalizeContent(content: MessageContent) {
 
 export const nvidiaNimAdapter: ProviderAdapter = {
   provider: "nvidia-nim",
-  async generate({ apiKey, modelId, prompt, signal }: GenerateParams): Promise<GenerateResult> {
+  async generate({ apiKey, modelId, systemPrompt, userPrompt, signal }: GenerateParams): Promise<GenerateResult> {
     const start = performance.now();
     const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
       method: "POST",
@@ -47,9 +47,17 @@ export const nvidiaNimAdapter: ProviderAdapter = {
       body: JSON.stringify({
         model: modelId,
         messages: [
+          ...(systemPrompt?.trim()
+            ? [
+                {
+                  role: "system",
+                  content: systemPrompt.trim(),
+                },
+              ]
+            : []),
           {
             role: "user",
-            content: prompt,
+            content: userPrompt,
           },
         ],
       }),

@@ -9,7 +9,7 @@ import { useWorkspaceStore } from "@/stores/workspace-store";
 export function SavedRunsPage() {
   const router = useRouter();
   const { items, loading, error, load, remove } = useSavedRunsStore();
-  const { loadSavedRun } = useWorkspaceStore();
+  const { loadSavedRun, reuseSavedPrompts } = useWorkspaceStore();
 
   useEffect(() => {
     void load();
@@ -47,6 +47,10 @@ export function SavedRunsPage() {
           }}
           onOpen={(run) => {
             loadSavedRun(run);
+            router.push("/workspace");
+          }}
+          onReusePrompts={(run) => {
+            reuseSavedPrompts(run);
             router.push("/workspace");
           }}
         />

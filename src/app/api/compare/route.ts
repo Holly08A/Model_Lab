@@ -7,7 +7,8 @@ type CompareRequestBody = {
   provider: ProviderType;
   apiKey: string;
   modelId: string;
-  prompt: string;
+  systemPrompt?: string;
+  userPrompt: string;
 };
 
 export async function POST(request: Request) {
@@ -22,9 +23,9 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!body.provider || !body.apiKey || !body.modelId || !body.prompt?.trim()) {
+  if (!body.provider || !body.apiKey || !body.modelId || !body.userPrompt?.trim()) {
     return NextResponse.json(
-      { message: "provider, apiKey, modelId, and prompt are required." },
+      { message: "provider, apiKey, modelId, and userPrompt are required." },
       { status: 400 },
     );
   }
@@ -41,7 +42,8 @@ export async function POST(request: Request) {
     const result = await adapter.generate({
       apiKey: body.apiKey,
       modelId: body.modelId,
-      prompt: body.prompt,
+      systemPrompt: body.systemPrompt,
+      userPrompt: body.userPrompt,
     });
 
     return NextResponse.json(result);

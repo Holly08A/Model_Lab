@@ -132,9 +132,6 @@ export const useSetupStore = create<SetupStore>((set, get) => ({
     if (exists) {
       nextMetrics = current.filter((item) => item.id !== metric.id);
     } else {
-      if (current.length >= 5) {
-        return;
-      }
       nextMetrics = [...current, metric];
     }
 
@@ -150,10 +147,6 @@ export const useSetupStore = create<SetupStore>((set, get) => ({
     }
 
     const current = get().selectedMetrics;
-    if (current.length >= 5) {
-      return { ok: false, message: "You can compare up to five metrics at a time." };
-    }
-
     const exists = current.some((metric) => metric.label.trim().toLowerCase() === trimmedLabel.toLowerCase());
     if (exists) {
       return { ok: false, message: "That metric label is already in use." };
@@ -207,9 +200,6 @@ export const useSetupStore = create<SetupStore>((set, get) => ({
     const metrics = get().selectedMetrics.map((metric) => metric.label.trim()).filter(Boolean);
     if (metrics.length === 0) {
       return { ok: false, message: "Choose at least one metric." };
-    }
-    if (metrics.length > 5) {
-      return { ok: false, message: "You can compare up to five metrics at a time." };
     }
     if (new Set(metrics.map((metric) => metric.toLowerCase())).size !== metrics.length) {
       return { ok: false, message: "Metric labels must be unique." };

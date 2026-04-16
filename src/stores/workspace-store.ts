@@ -10,7 +10,9 @@ import { useSetupStore } from "@/stores/setup-store";
 import type { MetricConfig, ModelRunResult, SavedRun } from "@/types";
 
 type WorkspaceStore = {
-  prompt: string;
+  testCaseName: string;
+  systemPrompt: string;
+  userPrompt: string;
   isRunning: boolean;
   activeTab: "llm" | "dashboard";
   currentRunId: string | null;
@@ -19,15 +21,19 @@ type WorkspaceStore = {
   runError: string | null;
   saveMessage: string | null;
   hasUnsavedChanges: boolean;
-  setPrompt: (prompt: string) => void;
+  setTestCaseName: (value: string) => void;
+  setSystemPrompt: (prompt: string) => void;
+  setUserPrompt: (prompt: string) => void;
   setActiveTab: (tab: "llm" | "dashboard") => void;
   openResult: (modelConfigId: string) => void;
   closeResult: () => void;
   scoreMetric: (modelConfigId: string, metricId: string, score: number | null) => void;
   setNotes: (modelConfigId: string, notes: string) => void;
+  startNewRun: () => void;
   runPrompt: () => Promise<void>;
   saveCurrentRun: () => Promise<void>;
   loadSavedRun: (run: SavedRun) => void;
+  reuseSavedPrompts: (run: SavedRun) => void;
 };
 
 function createEmptyResult(metricConfigs: MetricConfig[], model: ReturnType<typeof useSetupStore.getState>["models"][number]): ModelRunResult {
@@ -48,7 +54,9 @@ function createEmptyResult(metricConfigs: MetricConfig[], model: ReturnType<type
 }
 
 export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
-  prompt: "",
+  testCaseName: "",
+  systemPrompt: "",
+  userPrompt: "",
   isRunning: false,
   activeTab: "llm",
   currentRunId: null,
@@ -57,7 +65,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   runError: null,
   saveMessage: null,
   hasUnsavedChanges: false,
-  setPrompt: (prompt) => set({ prompt }),
+  setTestCaseName: (testCaseName) => set({ testCaseName }),
+  setSystemPrompt: (systemPrompt) => set({ systemPrompt }),
+  setUserPrompt: (userPrompt) => set({ userPrompt }),
   setActiveTab: (tab) => set({ activeTab: tab }),
   openResult: (modelConfigId) => set({ selectedResultId: modelConfigId }),
   closeResult: () => set({ selectedResultId: null }),
@@ -86,14 +96,29 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
               notes,
             }
           : result,
-      ),
-    })),
+        ),
+      })),
+  startNewRun: () =>
+    set({
+      currentRunId: null,
+      testCaseName: "",
+      systemPrompt: "",
+      userPrompt: "",
+      results: [],
+      activeTab: "llm",
+      runError: null,
+      saveMessage: "Started a new comparison draft.",
+      selectedResultId: null,
+      isRunning: false,
+      hasUnsavedChanges: false,
+    }),
   runPrompt: async () => {
     const setup = useSetupStore.getState();
-    const prompt = get().prompt.trim();
+    const systemPrompt = get().systemPrompt.trim();
+    const userPrompt = get().userPrompt.trim();
 
-    if (!prompt) {
-      set({ runError: "Enter a prompt before running the comparison." });
+    if (!userPrompt) {
+      set({ runError: "Enter a user prompt before running the comparison." });
       return;
     }
 
@@ -136,7 +161,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
             provider: model.provider,
             apiKey,
             modelId: model.modelId,
-            prompt,
+            systemPrompt,
+            userPrompt,
           }),
         });
 
@@ -209,8 +235,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     const setup = useSetupStore.getState();
     const state = get();
 
-    if (!state.prompt.trim()) {
-      set({ saveMessage: "Run a prompt before saving." });
+    if (!state.userPrompt.trim()) {
+      set({ saveMessage: "Run a comparison before saving." });
       return;
     }
 
@@ -222,8 +248,10 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     const createdAt = new Date().toISOString();
     const record: SavedRun = {
       id: state.currentRunId ?? nanoid(),
-      title: createRunTitle(state.prompt, createdAt),
-      prompt: state.prompt,
+      title: createRunTitle(state.testCaseName, state.userPrompt, createdAt),
+      prompt: state.userPrompt,
+      systemPrompt: state.systemPrompt,
+      userPrompt: state.userPrompt,
       createdAt,
       savedAt: createdAt,
       metrics: setup.selectedMetrics,
@@ -240,11 +268,27 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   loadSavedRun: (run) =>
     set({
       currentRunId: run.id,
-      prompt: run.prompt,
+      testCaseName: run.title,
+      systemPrompt: run.systemPrompt ?? "",
+      userPrompt: run.userPrompt ?? run.prompt ?? "",
       results: run.models,
       activeTab: "llm",
       runError: null,
       saveMessage: `Loaded saved run from ${new Date(run.savedAt).toLocaleString()}.`,
+      selectedResultId: null,
+      isRunning: false,
+      hasUnsavedChanges: false,
+    }),
+  reuseSavedPrompts: (run) =>
+    set({
+      currentRunId: null,
+      testCaseName: run.title,
+      systemPrompt: run.systemPrompt ?? "",
+      userPrompt: run.userPrompt ?? run.prompt ?? "",
+      results: [],
+      activeTab: "llm",
+      runError: null,
+      saveMessage: "Prompts loaded into workspace. Run again to create a new comparison.",
       selectedResultId: null,
       isRunning: false,
       hasUnsavedChanges: false,

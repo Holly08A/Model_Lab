@@ -74,7 +74,10 @@ export type ModelRunResult = {
 
 export type RunResult = {
   id: string;
-  prompt: string;
+  title?: string;
+  prompt?: string;
+  systemPrompt?: string;
+  userPrompt?: string;
   createdAt: string;
   models: ModelRunResult[];
   metrics: MetricConfig[];

@@ -3,7 +3,8 @@ import type { ProviderType } from "@/types";
 export type GenerateParams = {
   apiKey: string;
   modelId: string;
-  prompt: string;
+  systemPrompt?: string;
+  userPrompt: string;
   signal?: AbortSignal;
 };
 

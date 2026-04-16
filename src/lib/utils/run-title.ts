@@ -1,6 +1,11 @@
-export function createRunTitle(prompt: string, savedAt: string) {
+export function createRunTitle(title: string | undefined, userPrompt: string, savedAt: string) {
+  const trimmedTitle = title?.trim();
+  if (trimmedTitle) {
+    return trimmedTitle;
+  }
+
   const dateLabel = new Date(savedAt).toLocaleString();
-  const promptPreview = prompt.trim().replace(/\s+/g, " ");
+  const promptPreview = userPrompt.trim().replace(/\s+/g, " ");
   const shortPrompt =
     promptPreview.length > 80 ? `${promptPreview.slice(0, 80).trimEnd()}...` : promptPreview;
 

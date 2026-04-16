@@ -15,7 +15,9 @@ function formatProvider(provider: "openrouter" | "nvidia-nim") {
 export function WorkspacePage() {
   const { hydrate, hydrated, models, selectedMetrics } = useSetupStore();
   const {
-    prompt,
+    testCaseName,
+    systemPrompt,
+    userPrompt,
     isRunning,
     activeTab,
     results,
@@ -23,12 +25,15 @@ export function WorkspacePage() {
     runError,
     saveMessage,
     hasUnsavedChanges,
-    setPrompt,
+    setTestCaseName,
+    setSystemPrompt,
+    setUserPrompt,
     setActiveTab,
     openResult,
     closeResult,
     scoreMetric,
     setNotes,
+    startNewRun,
     runPrompt,
     saveCurrentRun,
   } = useWorkspaceStore();
@@ -138,11 +143,16 @@ export function WorkspacePage() {
 
       <PromptComposer
         disabled={isRunning || activeModels.length === 0}
-        onChange={setPrompt}
+        onSystemPromptChange={setSystemPrompt}
+        onTestCaseNameChange={setTestCaseName}
+        onUserPromptChange={setUserPrompt}
+        onNew={startNewRun}
         onRun={() => {
           void runPrompt();
         }}
-        prompt={prompt}
+        systemPrompt={systemPrompt}
+        testCaseName={testCaseName}
+        userPrompt={userPrompt}
       />
 
       <section className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm">
