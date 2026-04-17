@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { validateKnowledgeSourceConfig } from "@/lib/validation/setup";
 import { DashboardTab } from "@/components/dashboard/dashboard-tab";
 import { ModelDetailDialog } from "@/components/workspace/model-detail-dialog";
 import { ModelResultCard } from "@/components/workspace/model-result-card";
@@ -13,12 +14,15 @@ function formatProvider(provider: "openrouter" | "nvidia-nim") {
 }
 
 export function WorkspacePage() {
-  const { hydrate, hydrated, models, selectedMetrics } = useSetupStore();
+  const { hydrate, hydrated, models, selectedMetrics, knowledgeSource } = useSetupStore();
   const {
     testCaseName,
     systemPrompt,
     userPrompt,
     isRunning,
+    useKnowledgeSource,
+    knowledgeFetchStatus,
+    knowledgeFetchMessage,
     activeTab,
     results,
     selectedResultId,
@@ -28,6 +32,7 @@ export function WorkspacePage() {
     setTestCaseName,
     setSystemPrompt,
     setUserPrompt,
+    setUseKnowledgeSource,
     setActiveTab,
     openResult,
     closeResult,
@@ -60,6 +65,9 @@ export function WorkspacePage() {
 
   const activeModels = models.filter((model) => model.enabled);
   const selectedResult = results.find((result) => result.modelConfigId === selectedResultId) ?? null;
+  const knowledgeSourceValidation = validateKnowledgeSourceConfig(knowledgeSource);
+  const canUseKnowledgeSource = Boolean(knowledgeSource && knowledgeSourceValidation.ok);
+  const configuredKnowledgeSource = canUseKnowledgeSource ? knowledgeSource : null;
 
   return (
     <div className="space-y-6">
@@ -154,6 +162,40 @@ export function WorkspacePage() {
         testCaseName={testCaseName}
         userPrompt={userPrompt}
       />
+
+      {configuredKnowledgeSource ? (
+        <section className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--card)] p-6 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <label className="flex items-start gap-3">
+              <input
+                checked={useKnowledgeSource}
+                className="mt-1 h-4 w-4 rounded border-stone-300 text-[color:var(--accent)] focus:ring-[color:var(--accent)]"
+                onChange={(event) => setUseKnowledgeSource(event.target.checked)}
+                type="checkbox"
+              />
+              <span className="text-sm leading-6 text-stone-700">
+                <span className="block font-medium text-stone-900">Use local capability catalog</span>
+                Include up to {configuredKnowledgeSource.rowLimit} row{configuredKnowledgeSource.rowLimit === 1 ? "" : "s"} from{" "}
+                <span className="font-medium">{configuredKnowledgeSource.fileName}</span> as prompt context for this run.
+              </span>
+            </label>
+
+            {knowledgeFetchMessage ? (
+              <p
+                className={`rounded-2xl px-4 py-3 text-sm ${
+                  knowledgeFetchStatus === "error"
+                    ? "border border-rose-200 bg-rose-50 text-rose-700"
+                    : knowledgeFetchStatus === "success"
+                      ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                      : "border border-stone-200 bg-stone-50 text-stone-700"
+                }`}
+              >
+                {knowledgeFetchMessage}
+              </p>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       <section className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">

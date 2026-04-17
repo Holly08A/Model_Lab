@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CustomModelForm } from "@/components/setup/custom-model-form";
+import { KnowledgeSourceSection } from "@/components/setup/knowledge-source-section";
 import { MetricsSection } from "@/components/setup/metrics-section";
 import { ProviderKeysSection } from "@/components/setup/provider-keys-section";
 import { RecommendedModelsSection } from "@/components/setup/recommended-models-section";
@@ -19,7 +20,9 @@ export function SetupWizardPage() {
     providerKeys,
     models,
     selectedMetrics,
+    knowledgeSource,
     setProviderKey,
+    setKnowledgeSource,
     toggleModel,
     addCustomModel,
     deleteCustomModel,
@@ -87,6 +90,7 @@ export function SetupWizardPage() {
         {hydrated ? (
           <>
             <ProviderKeysSection onChange={setProviderKey} providerKeys={providerKeys} />
+            <KnowledgeSourceSection knowledgeSource={knowledgeSource} onChange={setKnowledgeSource} />
             <RecommendedModelsSection
               models={models}
               onDeleteCustomModel={deleteCustomModel}

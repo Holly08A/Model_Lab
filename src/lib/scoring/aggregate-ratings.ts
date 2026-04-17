@@ -1,3 +1,4 @@
+import { defaultModels } from "@/lib/constants/default-models";
 import type { SavedRun } from "@/types";
 
 export type AggregateMetricScore = {
@@ -11,6 +12,7 @@ export type AggregateModelRating = {
   modelKey: string;
   displayName: string;
   provider: string;
+  contextWindow?: number;
   runCount: number;
   responseCount: number;
   scoredResponseCount: number;
@@ -32,6 +34,7 @@ type ModelAccumulator = {
   modelKey: string;
   displayName: string;
   provider: string;
+  contextWindow?: number;
   runIds: Set<string>;
   responseCount: number;
   scoredResponseCount: number;
@@ -46,6 +49,12 @@ type ModelAccumulator = {
   metrics: Map<string, MetricAccumulator>;
 };
 
+const defaultContextWindows = new Map(
+  defaultModels
+    .filter((model) => model.contextWindow !== undefined)
+    .map((model) => [`${model.provider}:${model.modelId}`, model.contextWindow as number]),
+);
+
 export function aggregateModelRatings(savedRuns: SavedRun[]): AggregateModelRating[] {
   const modelMap = new Map<string, ModelAccumulator>();
 
@@ -58,6 +67,7 @@ export function aggregateModelRatings(savedRuns: SavedRun[]): AggregateModelRati
           modelKey,
           displayName: model.displayName,
           provider: model.provider,
+          contextWindow: model.contextWindow ?? defaultContextWindows.get(modelKey),
           runIds: new Set<string>(),
           responseCount: 0,
           scoredResponseCount: 0,
@@ -71,6 +81,10 @@ export function aggregateModelRatings(savedRuns: SavedRun[]): AggregateModelRati
           estimatedCostCount: 0,
           metrics: new Map<string, MetricAccumulator>(),
         };
+
+      if (current.contextWindow === undefined && model.contextWindow !== undefined) {
+        current.contextWindow = model.contextWindow;
+      }
 
       current.runIds.add(run.id);
       current.responseCount += 1;
@@ -123,6 +137,7 @@ export function aggregateModelRatings(savedRuns: SavedRun[]): AggregateModelRati
       modelKey: model.modelKey,
       displayName: model.displayName,
       provider: model.provider,
+      contextWindow: model.contextWindow,
       runCount: model.runIds.size,
       responseCount: model.responseCount,
       scoredResponseCount: model.scoredResponseCount,

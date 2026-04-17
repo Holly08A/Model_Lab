@@ -12,6 +12,14 @@ function formatPrice(value: number) {
   return value === 0 ? "0.00" : value.toFixed(4);
 }
 
+function formatContextWindow(value?: number) {
+  if (value === undefined) {
+    return null;
+  }
+
+  return value.toLocaleString();
+}
+
 export function RecommendedModelsSection({
   models,
   onToggle,
@@ -50,6 +58,9 @@ export function RecommendedModelsSection({
                 </div>
                 <p className="text-sm text-stone-500">{model.modelId}</p>
                 <div className="flex flex-wrap gap-3 text-xs text-stone-600">
+                  {model.contextWindow !== undefined ? (
+                    <span>Context: {formatContextWindow(model.contextWindow)} tokens</span>
+                  ) : null}
                   <span>Input / 1K: ${formatPrice(model.inputPricePer1k)}</span>
                   <span>Output / 1K: ${formatPrice(model.outputPricePer1k)}</span>
                 </div>

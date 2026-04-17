@@ -1,6 +1,7 @@
 "use client";
 
 import { nanoid } from "nanoid";
+import { buildKnowledgePrompt, getKnowledgeRows } from "@/lib/knowledge/source";
 import { create } from "zustand";
 import { saveRun } from "@/lib/storage/db";
 import { calculateEstimatedCost } from "@/lib/utils/cost";
@@ -14,6 +15,9 @@ type WorkspaceStore = {
   systemPrompt: string;
   userPrompt: string;
   isRunning: boolean;
+  useKnowledgeSource: boolean;
+  knowledgeFetchStatus: "idle" | "loading" | "success" | "error";
+  knowledgeFetchMessage: string | null;
   activeTab: "llm" | "dashboard";
   currentRunId: string | null;
   results: ModelRunResult[];
@@ -24,6 +28,7 @@ type WorkspaceStore = {
   setTestCaseName: (value: string) => void;
   setSystemPrompt: (prompt: string) => void;
   setUserPrompt: (prompt: string) => void;
+  setUseKnowledgeSource: (value: boolean) => void;
   setActiveTab: (tab: "llm" | "dashboard") => void;
   openResult: (modelConfigId: string) => void;
   closeResult: () => void;
@@ -42,6 +47,7 @@ function createEmptyResult(metricConfigs: MetricConfig[], model: ReturnType<type
     provider: model.provider,
     modelId: model.modelId,
     displayName: model.displayName,
+    contextWindow: model.contextWindow,
     status: "idle",
     responseText: "",
     responsePreview: "",
@@ -58,6 +64,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   systemPrompt: "",
   userPrompt: "",
   isRunning: false,
+  useKnowledgeSource: false,
+  knowledgeFetchStatus: "idle",
+  knowledgeFetchMessage: null,
   activeTab: "llm",
   currentRunId: null,
   results: [],
@@ -68,6 +77,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   setTestCaseName: (testCaseName) => set({ testCaseName }),
   setSystemPrompt: (systemPrompt) => set({ systemPrompt }),
   setUserPrompt: (userPrompt) => set({ userPrompt }),
+  setUseKnowledgeSource: (useKnowledgeSource) => set({ useKnowledgeSource }),
   setActiveTab: (tab) => set({ activeTab: tab }),
   openResult: (modelConfigId) => set({ selectedResultId: modelConfigId }),
   closeResult: () => set({ selectedResultId: null }),
@@ -104,6 +114,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
       testCaseName: "",
       systemPrompt: "",
       userPrompt: "",
+      useKnowledgeSource: false,
+      knowledgeFetchStatus: "idle",
+      knowledgeFetchMessage: null,
       results: [],
       activeTab: "llm",
       runError: null,
@@ -116,6 +129,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     const setup = useSetupStore.getState();
     const systemPrompt = get().systemPrompt.trim();
     const userPrompt = get().userPrompt.trim();
+    const shouldUseKnowledgeSource = get().useKnowledgeSource && Boolean(setup.knowledgeSource);
 
     if (!userPrompt) {
       set({ runError: "Enter a user prompt before running the comparison." });
@@ -128,6 +142,44 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
       return;
     }
 
+    set({
+      isRunning: true,
+      runError: null,
+      saveMessage: null,
+    });
+
+    let finalUserPrompt = userPrompt;
+    if (shouldUseKnowledgeSource && setup.knowledgeSource) {
+      set({
+        knowledgeFetchStatus: "loading",
+        knowledgeFetchMessage: "Preparing local catalog rows for this comparison...",
+      });
+
+      try {
+        const rows = getKnowledgeRows(setup.knowledgeSource);
+        finalUserPrompt = buildKnowledgePrompt(setup.knowledgeSource, rows, userPrompt);
+        set({
+          knowledgeFetchStatus: "success",
+          knowledgeFetchMessage: `Loaded ${rows.length} row${rows.length === 1 ? "" : "s"} from ${setup.knowledgeSource.fileName}.`,
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Failed to prepare the uploaded local catalog rows.";
+        set({
+          knowledgeFetchStatus: "error",
+          knowledgeFetchMessage: message,
+          runError: message,
+          isRunning: false,
+        });
+        return;
+      }
+    } else {
+      set({
+        knowledgeFetchStatus: "idle",
+        knowledgeFetchMessage: null,
+      });
+    }
+
     const activeModels = setup.models.filter((model) => model.enabled);
     const baseResults = activeModels.map((model) => ({
       ...createEmptyResult(setup.selectedMetrics, model),
@@ -135,7 +187,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     }));
 
     set({
-      isRunning: true,
       runError: null,
       saveMessage: null,
       hasUnsavedChanges: true,
@@ -162,7 +213,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
             apiKey,
             modelId: model.modelId,
             systemPrompt,
-            userPrompt,
+            userPrompt: finalUserPrompt,
           }),
         });
 
@@ -252,6 +303,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
       prompt: state.userPrompt,
       systemPrompt: state.systemPrompt,
       userPrompt: state.userPrompt,
+      useKnowledgeSource: state.useKnowledgeSource,
       createdAt,
       savedAt: createdAt,
       metrics: setup.selectedMetrics,
@@ -271,6 +323,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
       testCaseName: run.title,
       systemPrompt: run.systemPrompt ?? "",
       userPrompt: run.userPrompt ?? run.prompt ?? "",
+      useKnowledgeSource: run.useKnowledgeSource ?? false,
+      knowledgeFetchStatus: "idle",
+      knowledgeFetchMessage: null,
       results: run.models,
       activeTab: "llm",
       runError: null,
@@ -285,6 +340,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
       testCaseName: run.title,
       systemPrompt: run.systemPrompt ?? "",
       userPrompt: run.userPrompt ?? run.prompt ?? "",
+      useKnowledgeSource: run.useKnowledgeSource ?? false,
+      knowledgeFetchStatus: "idle",
+      knowledgeFetchMessage: null,
       results: [],
       activeTab: "llm",
       runError: null,

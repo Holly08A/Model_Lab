@@ -1,4 +1,5 @@
 export type ProviderType = "openrouter" | "nvidia-nim";
+export type KnowledgeSourceProvider = "local-file";
 
 export type ProviderConfig = {
   provider: ProviderType;
@@ -10,12 +11,21 @@ export type ModelConfig = {
   provider: ProviderType;
   modelId: string;
   displayName: string;
+  contextWindow?: number;
   inputPricePer1k: number;
   outputPricePer1k: number;
   enabled: boolean;
   isDefault: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type KnowledgeSourceConfig = {
+  provider: KnowledgeSourceProvider;
+  fileName: string;
+  rows: Array<Record<string, unknown>>;
+  columns: string[];
+  rowLimit: number;
 };
 
 export type MetricConfig = {
@@ -50,6 +60,7 @@ export type ModelRunResult = {
   provider: ProviderType;
   modelId: string;
   displayName: string;
+  contextWindow?: number;
   status: "idle" | "running" | "success" | "error";
   responseText?: string;
   responsePreview?: string;
@@ -78,6 +89,7 @@ export type RunResult = {
   prompt?: string;
   systemPrompt?: string;
   userPrompt?: string;
+  useKnowledgeSource?: boolean;
   createdAt: string;
   models: ModelRunResult[];
   metrics: MetricConfig[];
@@ -92,5 +104,6 @@ export type SetupState = {
   providerKeys: Partial<Record<ProviderType, string>>;
   models: ModelConfig[];
   selectedMetrics: MetricConfig[];
+  knowledgeSource: KnowledgeSourceConfig | null;
   onboardingComplete: boolean;
 };

@@ -21,6 +21,7 @@ export function CustomModelForm({ onSubmitModel }: CustomModelFormProps) {
       provider: "openrouter",
       modelId: "",
       displayName: "",
+      contextWindow: undefined,
       inputPricePer1k: 0,
       outputPricePer1k: 0,
     },
@@ -40,6 +41,7 @@ export function CustomModelForm({ onSubmitModel }: CustomModelFormProps) {
       provider: values.provider,
       modelId: "",
       displayName: "",
+      contextWindow: undefined,
       inputPricePer1k: 0,
       outputPricePer1k: 0,
     });
@@ -76,7 +78,7 @@ export function CustomModelForm({ onSubmitModel }: CustomModelFormProps) {
           {errors.displayName ? <p className="text-xs text-red-600">{errors.displayName.message}</p> : null}
         </label>
 
-        <label className="space-y-2 text-sm text-stone-700 md:col-span-2">
+        <label className="space-y-2 text-sm text-stone-700">
           <span>Model ID</span>
           <input
             className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 outline-none transition focus:border-[color:var(--accent)]"
@@ -84,6 +86,19 @@ export function CustomModelForm({ onSubmitModel }: CustomModelFormProps) {
             {...register("modelId")}
           />
           {errors.modelId ? <p className="text-xs text-red-600">{errors.modelId.message}</p> : null}
+        </label>
+
+        <label className="space-y-2 text-sm text-stone-700">
+          <span>Context window (optional)</span>
+          <input
+            className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 outline-none transition focus:border-[color:var(--accent)]"
+            min="1"
+            placeholder="1048576"
+            step="1"
+            type="number"
+            {...register("contextWindow")}
+          />
+          {errors.contextWindow ? <p className="text-xs text-red-600">{errors.contextWindow.message}</p> : null}
         </label>
 
         <label className="space-y-2 text-sm text-stone-700">

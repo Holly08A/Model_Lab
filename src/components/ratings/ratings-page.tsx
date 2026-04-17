@@ -13,6 +13,14 @@ function formatScore(value?: number) {
   return `${value.toFixed(1)} / 10`;
 }
 
+function formatContextWindow(value?: number) {
+  if (value === undefined) {
+    return "Unavailable";
+  }
+
+  return `${formatNumber(value)} tokens`;
+}
+
 export function RatingsPage() {
   const { items, loading, error, load } = useSavedRunsStore();
   const [selectedTitles, setSelectedTitles] = useState<string[]>([]);
@@ -168,6 +176,13 @@ export function RatingsPage() {
                     <p className="text-xs uppercase tracking-[0.2em] text-stone-400">Scored responses</p>
                     <p className="mt-2 text-lg font-semibold text-stone-900">{model.scoredResponseCount}</p>
                   </div>
+                </div>
+
+                <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-4 xl:min-w-64">
+                  <p className="text-xs uppercase tracking-[0.2em] text-stone-400">Context window</p>
+                  <p className="mt-2 text-lg font-semibold text-stone-900">
+                    {formatContextWindow(model.contextWindow)}
+                  </p>
                 </div>
               </div>
 

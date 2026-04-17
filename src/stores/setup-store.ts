@@ -4,7 +4,9 @@ import { nanoid } from "nanoid";
 import { create } from "zustand";
 import { defaultMetrics, defaultModels } from "@/lib/constants/default-models";
 import { STORAGE_KEYS, localStore } from "@/lib/storage/local";
+import { validateKnowledgeSourceConfig } from "@/lib/validation/setup";
 import type {
+  KnowledgeSourceConfig,
   MetricConfig,
   ModelConfig,
   ProviderType,
@@ -15,6 +17,7 @@ type SetupStore = SetupState & {
   hydrated: boolean;
   hydrate: () => void;
   setProviderKey: (provider: ProviderType, apiKey: string) => void;
+  setKnowledgeSource: (knowledgeSource: KnowledgeSourceConfig | null) => void;
   toggleModel: (id: string) => void;
   addCustomModel: (
     model: Omit<ModelConfig, "id" | "createdAt" | "updatedAt" | "enabled" | "isDefault">,
@@ -56,6 +59,7 @@ export const useSetupStore = create<SetupStore>((set, get) => ({
   providerKeys: {},
   models: defaultModels,
   selectedMetrics: defaultMetrics,
+  knowledgeSource: null,
   onboardingComplete: false,
   hydrate: () => {
     if (get().hydrated || typeof window === "undefined") {
@@ -72,6 +76,7 @@ export const useSetupStore = create<SetupStore>((set, get) => ({
       providerKeys,
       models: localStore.getModels(),
       selectedMetrics: localStore.getSelectedMetrics(),
+      knowledgeSource: localStore.getKnowledgeSource(),
       onboardingComplete: getOnboardingComplete(),
     });
   },
@@ -83,6 +88,10 @@ export const useSetupStore = create<SetupStore>((set, get) => ({
         [provider]: apiKey,
       },
     }));
+  },
+  setKnowledgeSource: (knowledgeSource) => {
+    localStore.setKnowledgeSource(knowledgeSource);
+    set({ knowledgeSource });
   },
   toggleModel: (id) => {
     const models = get().models.map((model) =>
@@ -213,6 +222,11 @@ export const useSetupStore = create<SetupStore>((set, get) => ({
           message: `Add the ${provider === "openrouter" ? "OpenRouter" : "NVIDIA NIM"} API key for your active models.`,
         };
       }
+    }
+
+    const knowledgeSourceValidation = validateKnowledgeSourceConfig(get().knowledgeSource);
+    if (!knowledgeSourceValidation.ok) {
+      return knowledgeSourceValidation;
     }
 
     return { ok: true };
