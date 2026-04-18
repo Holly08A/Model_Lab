@@ -2,8 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { aggregateModelRatings } from "@/lib/scoring/aggregate-ratings";
+import { ModelReviewDialog } from "@/components/ratings/model-review-dialog";
+import { sampleModelResponses } from "@/lib/ratings/sample-model-responses";
+import { localStore } from "@/lib/storage/local";
 import { formatCurrency, formatDuration, formatNumber } from "@/lib/utils/format";
 import { useSavedRunsStore } from "@/stores/saved-runs-store";
+import type { AggregateModelRating } from "@/lib/scoring/aggregate-ratings";
 
 function formatScore(value?: number) {
   if (value === undefined) {
@@ -24,10 +28,17 @@ function formatContextWindow(value?: number) {
 export function RatingsPage() {
   const { items, loading, error, load } = useSavedRunsStore();
   const [selectedTitles, setSelectedTitles] = useState<string[]>([]);
+  const [selectedModelKey, setSelectedModelKey] = useState<string | null>(null);
+  const [shuffleSeed, setShuffleSeed] = useState(0);
+  const [modelNotes, setModelNotes] = useState<Record<string, string>>({});
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    setModelNotes(localStore.getRatingsModelNotes());
+  }, []);
 
   const availableTitles = useMemo(
     () =>
@@ -46,11 +57,45 @@ export function RatingsPage() {
   }, [items, selectedTitles]);
 
   const aggregates = useMemo(() => aggregateModelRatings(filteredRuns), [filteredRuns]);
+  const selectedModel =
+    aggregates.find((model) => model.modelKey === selectedModelKey) ?? null;
+  const sampledResponses = useMemo(() => {
+    if (!selectedModel) {
+      return [];
+    }
+
+    return sampleModelResponses({
+      savedRuns: filteredRuns,
+      model: selectedModel,
+      limit: 10,
+    });
+  }, [filteredRuns, selectedModel, shuffleSeed]);
 
   const toggleTitle = (title: string) => {
     setSelectedTitles((current) =>
       current.includes(title) ? current.filter((item) => item !== title) : [...current, title],
     );
+  };
+
+  const handleOpenModel = (model: AggregateModelRating) => {
+    setSelectedModelKey(model.modelKey);
+    setShuffleSeed((current) => current + 1);
+  };
+
+  const handleCloseModel = () => {
+    setSelectedModelKey(null);
+  };
+
+  const handleNoteChange = (value: string) => {
+    if (!selectedModel) {
+      return;
+    }
+
+    localStore.setRatingsModelNote(selectedModel.modelKey, value);
+    setModelNotes((current) => ({
+      ...current,
+      [selectedModel.modelKey]: value,
+    }));
   };
 
   return (
@@ -136,9 +181,11 @@ export function RatingsPage() {
       ) : (
         <div className="space-y-4">
           {aggregates.map((model, index) => (
-            <article
-              className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--card)] p-6 shadow-sm"
+            <button
+              className="block w-full rounded-[28px] border border-[color:var(--border)] bg-[color:var(--card)] p-6 text-left shadow-sm transition hover:border-stone-300 hover:shadow-md"
               key={model.modelKey}
+              onClick={() => handleOpenModel(model)}
+              type="button"
             >
               <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                 <div className="space-y-3">
@@ -239,10 +286,19 @@ export function RatingsPage() {
                   )}
                 </div>
               </div>
-            </article>
+            </button>
           ))}
         </div>
       )}
+
+      <ModelReviewDialog
+        model={selectedModel}
+        note={selectedModel ? modelNotes[selectedModel.modelKey] ?? "" : ""}
+        onClose={handleCloseModel}
+        onNoteChange={handleNoteChange}
+        onShuffle={() => setShuffleSeed((current) => current + 1)}
+        sampledResponses={sampledResponses}
+      />
     </div>
   );
 }

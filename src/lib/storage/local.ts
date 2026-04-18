@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
   selectedMetrics: "llm-comparator.selected-metrics",
   knowledgeSource: "llm-comparator.knowledge-source",
   judgeConfig: "llm-comparator.judge-config",
+  ratingsModelNotes: "llm-comparator.ratings-model-notes",
   onboardingComplete: "llm-comparator.onboarding-complete",
   workspacePrefs: "llm-comparator.workspace-prefs",
 } as const;
@@ -207,5 +208,18 @@ export const localStore = {
   },
   setJudgeConfig(config: JudgeConfig) {
     writeJson(STORAGE_KEYS.judgeConfig, config);
+  },
+  getRatingsModelNotes(): Record<string, string> {
+    return readJson(STORAGE_KEYS.ratingsModelNotes, {});
+  },
+  getRatingsModelNote(modelKey: string) {
+    return this.getRatingsModelNotes()[modelKey] ?? "";
+  },
+  setRatingsModelNote(modelKey: string, note: string) {
+    const current = this.getRatingsModelNotes();
+    writeJson(STORAGE_KEYS.ratingsModelNotes, {
+      ...current,
+      [modelKey]: note,
+    });
   },
 };
