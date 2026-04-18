@@ -1,0 +1,37 @@
+{
+  "name": "Support and formatting benchmark",
+  "cases": [
+    {
+      "name": "Customer support tone",
+      "systemPrompt": "You are a calm support agent.",
+      "userPrompt": "Reply to a refund complaint in under 120 words.",
+      "useKnowledgeBase": false,
+      "referenceAnswer": "Apologize, explain the next step, and stay calm.",
+      "tags": ["support", "tone"],
+      "checks": [
+        { "type": "max_length", "value": 120 },
+        { "type": "keyword_contains", "value": "refund" }
+      ]
+    },
+    {
+      "name": "Capability tag selection",
+      "systemPrompt": "Choose only from the provided capability catalog when suggesting tags.",
+      "userPrompt": "Suggest the best matching capability tags for this feature request.",
+      "useKnowledgeBase": true,
+      "referenceAnswer": "Use only existing catalog tags when they fit; otherwise propose new ones separately.",
+      "tags": ["catalog", "tags"],
+      "checks": []
+    },
+    {
+      "name": "JSON output compliance",
+      "systemPrompt": "Return JSON only.",
+      "userPrompt": "Summarize the issue as valid JSON with keys issue,severity,next_step.",
+      "useKnowledgeBase": false,
+      "referenceAnswer": "{\"issue\":\"...\",\"severity\":\"...\",\"next_step\":\"...\"}",
+      "tags": ["json", "format"],
+      "checks": [
+        { "type": "json_parse" }
+      ]
+    }
+  ]
+}

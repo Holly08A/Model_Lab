@@ -1,0 +1,4 @@
+name,system_prompt,user_prompt,use_knowledge_base,reference_answer,tags,checks_json
+Customer support tone,"You are a calm support agent.","Reply to a refund complaint in under 120 words.",false,"Apologize, explain the next step, and stay calm.","support,tone","[{""type"":""max_length"",""value"":120},{""type"":""keyword_contains"",""value"":""refund""}]"
+Capability tag selection,"Choose only from the provided capability catalog when suggesting tags.","Suggest the best matching capability tags for this feature request.",true,"Use only existing catalog tags when they fit; otherwise propose new ones separately.","catalog,tags","[]"
+JSON output compliance,"Return JSON only.","Summarize the issue as valid JSON with keys issue,severity,next_step.",false,"{""issue"":""..."",""severity"":""..."",""next_step"":""...""}","json,format","[{""type"":""json_parse""}]"

@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 
 const links = [
   { href: "/", label: "Setup" },
-  { href: "/workspace", label: "Workspace" },
+  { href: "/workspace", label: "Single Run" },
+  { href: "/batch", label: "Batch Run" },
   { href: "/saved", label: "Saved Runs" },
   { href: "/ratings", label: "Ratings" },
 ];

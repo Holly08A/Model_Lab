@@ -1,5 +1,9 @@
 import { defaultModels } from "@/lib/constants/default-models";
 import type { SavedRun } from "@/types";
+import {
+  normalizeSavedRunsForRatings,
+  type NormalizedRatingRecord,
+} from "@/lib/scoring/normalize-ratings";
 
 export type AggregateMetricScore = {
   metricId: string;
@@ -55,19 +59,22 @@ const defaultContextWindows = new Map(
     .map((model) => [`${model.provider}:${model.modelId}`, model.contextWindow as number]),
 );
 
-export function aggregateModelRatings(savedRuns: SavedRun[]): AggregateModelRating[] {
+const defaultDisplayNames = new Map(
+  defaultModels.map((model) => [`${model.provider}:${model.modelId}`, model.displayName]),
+);
+
+function aggregateNormalizedRatings(records: NormalizedRatingRecord[]): AggregateModelRating[] {
   const modelMap = new Map<string, ModelAccumulator>();
 
-  for (const run of savedRuns) {
-    for (const model of run.models) {
-      const modelKey = `${model.provider}:${model.modelId}`;
+  for (const record of records) {
+      const modelKey = `${record.provider}:${record.modelId}`;
       const current =
         modelMap.get(modelKey) ??
         {
           modelKey,
-          displayName: model.displayName,
-          provider: model.provider,
-          contextWindow: model.contextWindow ?? defaultContextWindows.get(modelKey),
+          displayName: defaultDisplayNames.get(modelKey) ?? record.displayName,
+          provider: record.provider,
+          contextWindow: record.contextWindow ?? defaultContextWindows.get(modelKey),
           runIds: new Set<string>(),
           responseCount: 0,
           scoredResponseCount: 0,
@@ -82,36 +89,40 @@ export function aggregateModelRatings(savedRuns: SavedRun[]): AggregateModelRati
           metrics: new Map<string, MetricAccumulator>(),
         };
 
-      if (current.contextWindow === undefined && model.contextWindow !== undefined) {
-        current.contextWindow = model.contextWindow;
+      if (current.contextWindow === undefined && record.contextWindow !== undefined) {
+        current.contextWindow = record.contextWindow;
       }
 
-      current.runIds.add(run.id);
+      if (defaultDisplayNames.has(modelKey)) {
+        current.displayName = defaultDisplayNames.get(modelKey) ?? current.displayName;
+      }
+
+      current.runIds.add(record.sourceId);
       current.responseCount += 1;
 
-      if (model.timing.fullResponseTimeMs !== undefined) {
-        current.fullResponseTimeTotal += model.timing.fullResponseTimeMs;
+      if (record.timing.fullResponseTimeMs !== undefined) {
+        current.fullResponseTimeTotal += record.timing.fullResponseTimeMs;
         current.fullResponseTimeCount += 1;
       }
 
-      if (model.usage.totalTokens !== undefined) {
-        current.totalTokensTotal += model.usage.totalTokens;
+      if (record.usage.totalTokens !== undefined) {
+        current.totalTokensTotal += record.usage.totalTokens;
         current.totalTokensCount += 1;
       }
 
-      if (model.estimatedCost.totalCost !== undefined) {
-        current.estimatedCostTotal += model.estimatedCost.totalCost;
+      if (record.estimatedCost.totalCost !== undefined) {
+        current.estimatedCostTotal += record.estimatedCost.totalCost;
         current.estimatedCostCount += 1;
       }
 
-      const scoredValues = Object.entries(model.scores).filter((entry) => entry[1] !== null) as Array<
+      const scoredValues = Object.entries(record.scores).filter((entry) => entry[1] !== null) as Array<
         [string, number]
       >;
 
       if (scoredValues.length > 0) {
         current.scoredResponseCount += 1;
         for (const [metricId, score] of scoredValues) {
-          const metricMeta = run.metrics.find((metric) => metric.id === metricId);
+          const metricMeta = record.metrics.find((metric) => metric.id === metricId);
           const metric = current.metrics.get(metricId) ?? {
             metricId,
             label: metricMeta?.label ?? metricId,
@@ -129,7 +140,6 @@ export function aggregateModelRatings(savedRuns: SavedRun[]): AggregateModelRati
       }
 
       modelMap.set(modelKey, current);
-    }
   }
 
   return [...modelMap.values()]
@@ -174,4 +184,8 @@ export function aggregateModelRatings(savedRuns: SavedRun[]): AggregateModelRati
       }
       return b.runCount - a.runCount;
     });
+}
+
+export function aggregateModelRatings(savedRuns: SavedRun[]): AggregateModelRating[] {
+  return aggregateNormalizedRatings(normalizeSavedRunsForRatings(savedRuns));
 }

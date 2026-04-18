@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CustomModelForm } from "@/components/setup/custom-model-form";
+import { JudgeConfigSection } from "@/components/setup/judge-config-section";
 import { KnowledgeSourceSection } from "@/components/setup/knowledge-source-section";
 import { MetricsSection } from "@/components/setup/metrics-section";
 import { ProviderKeysSection } from "@/components/setup/provider-keys-section";
@@ -21,8 +22,10 @@ export function SetupWizardPage() {
     models,
     selectedMetrics,
     knowledgeSource,
+    judgeConfig,
     setProviderKey,
     setKnowledgeSource,
+    setJudgeConfig,
     toggleModel,
     addCustomModel,
     deleteCustomModel,
@@ -90,7 +93,6 @@ export function SetupWizardPage() {
         {hydrated ? (
           <>
             <ProviderKeysSection onChange={setProviderKey} providerKeys={providerKeys} />
-            <KnowledgeSourceSection knowledgeSource={knowledgeSource} onChange={setKnowledgeSource} />
             <RecommendedModelsSection
               models={models}
               onDeleteCustomModel={deleteCustomModel}
@@ -104,6 +106,8 @@ export function SetupWizardPage() {
               onToggleMetric={handleToggleMetric}
               selectedMetrics={selectedMetrics}
             />
+            <KnowledgeSourceSection knowledgeSource={knowledgeSource} onChange={setKnowledgeSource} />
+            <JudgeConfigSection judgeConfig={judgeConfig} onChange={setJudgeConfig} />
           </>
         ) : (
           <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--card)] p-8 text-stone-600">

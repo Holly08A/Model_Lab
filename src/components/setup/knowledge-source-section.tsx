@@ -166,12 +166,12 @@ export function KnowledgeSourceSection({
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-stone-500">External Knowledge</p>
           <h3 className="mt-2 text-xl font-semibold text-stone-900">
-            Optionally upload a local capability catalog file
+            Optionally upload a local knowledge base file
           </h3>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
-            Upload a JSON or CSV file that contains capability rows. The app parses the file in this browser and can prepend
-            selected columns to the prompt during a test run. For best results, keep only compact fields such as name, short
-            description, and category.
+            Upload a JSON or CSV file that contains knowledge rows relevant to your prompts. The app parses the file in this
+            browser and can prepend selected columns to the prompt during a test run. For best results, keep only compact
+            fields such as name, short description, category, or other lightweight reference data.
           </p>
         </div>
 
@@ -189,8 +189,9 @@ export function KnowledgeSourceSection({
       {!showForm ? (
         <div className="rounded-3xl border border-dashed border-stone-300 bg-white px-5 py-5">
           <p className="max-w-3xl text-sm leading-6 text-stone-600">
-            Leave this empty to keep the app fully local without catalog context. If you want the model to compare against
-            your current capabilities, upload one JSON or CSV catalog file here and turn it on per run in the workspace.
+            Leave this empty to keep the app fully local without extra knowledge context. If you want the model to reference
+            an uploaded JSON or CSV knowledge base file, add it here and turn it on per run in the workspace or per case in
+            batch mode.
           </p>
           <button
             className="mt-4 rounded-full bg-stone-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-stone-700"
@@ -203,8 +204,8 @@ export function KnowledgeSourceSection({
       ) : (
         <div className="space-y-4">
           <div className="rounded-3xl border border-stone-200 bg-white px-4 py-4 text-sm leading-6 text-stone-700">
-            Workspace decides whether to use this catalog on each test run. Saving it here only stores the uploaded rows and
-            the selected columns for prompt context.
+            Workspace decides whether to use this uploaded knowledge file on each test run. Saving it here only stores the
+            uploaded rows and selected columns for prompt context.
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -223,7 +224,7 @@ export function KnowledgeSourceSection({
                 <code className="ml-1 rounded bg-stone-100 px-1 py-0.5">
                   [{`{"name":"Billing","category":"Ops"}`}]
                 </code>
-                . CSV format: first row as headers, one capability per row.
+                . CSV format: first row as headers, one knowledge row per line.
               </p>
             </label>
 

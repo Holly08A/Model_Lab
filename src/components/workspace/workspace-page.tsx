@@ -74,13 +74,13 @@ export function WorkspacePage() {
       <section className="rounded-[32px] border border-[color:var(--border)] bg-[color:var(--card)] p-8 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
-            <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Workspace</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Single Run</p>
             <h2 className="text-3xl font-semibold tracking-tight text-stone-900">
-              Prompt run and side-by-side model review will live here.
+              Run one prompt across your selected models and review the results side by side.
             </h2>
             <p className="max-w-3xl text-base leading-7 text-stone-600">
-              Your setup from the previous screen is already available here. In the next phase we will add
-              prompt submission, response cards, scoring, and dashboard tabs on top of this saved configuration.
+              Your saved setup is already available here. Use this flow for one-off comparisons, manual score adjustments,
+              and detailed dashboard review of a single prompt run.
             </p>
           </div>
           <div className="rounded-3xl border border-stone-200 bg-stone-50 px-5 py-4 text-sm text-stone-600">
@@ -174,7 +174,7 @@ export function WorkspacePage() {
                 type="checkbox"
               />
               <span className="text-sm leading-6 text-stone-700">
-                <span className="block font-medium text-stone-900">Use local capability catalog</span>
+                <span className="block font-medium text-stone-900">Use uploaded knowledge base file</span>
                 Include up to {configuredKnowledgeSource.rowLimit} row{configuredKnowledgeSource.rowLimit === 1 ? "" : "s"} from{" "}
                 <span className="font-medium">{configuredKnowledgeSource.fileName}</span> as prompt context for this run.
               </span>

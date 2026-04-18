@@ -58,24 +58,23 @@ export function RatingsPage() {
       <section className="rounded-[32px] border border-[color:var(--border)] bg-[color:var(--card)] p-8 shadow-sm">
         <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Ratings</p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight text-stone-900">
-          See how each LLM has performed across all saved comparisons.
+          See how each LLM has performed across saved runs.
         </h2>
         <p className="mt-4 max-w-3xl text-base leading-7 text-stone-600">
-          This view aggregates saved browser-local runs by model, so you can track average overall scores,
-          per-metric performance, and how many times each LLM has been reviewed.
+          This view aggregates only records in Saved Runs, so each comparison is counted once whether it started as a
+          manual run or was materialized from a batch evaluation.
         </p>
       </section>
 
       <section className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--card)] p-6 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Filter by test case</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Filter by saved run</p>
             <h3 className="mt-2 text-xl font-semibold text-stone-900">
-              Choose which saved test cases are included in the rating averages
+              Choose which saved runs are included in the rating averages
             </h3>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
-              Leave everything unselected to use all saved runs, or select one or more test case names such as
-              `Test A` or `Test A + Test B`.
+              Leave everything unselected to use all saved runs, or select one or more saved run titles to narrow the leaderboard.
             </p>
           </div>
           <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-700">
@@ -95,7 +94,7 @@ export function RatingsPage() {
             onClick={() => setSelectedTitles([])}
             type="button"
           >
-            All test cases
+            All saved runs
           </button>
           {availableTitles.map((title) => {
             const isSelected = selectedTitles.includes(title);
@@ -128,11 +127,11 @@ export function RatingsPage() {
         </div>
       ) : filteredRuns.length === 0 ? (
         <div className="rounded-[28px] border border-dashed border-stone-300 bg-[color:var(--card)] p-8 text-sm leading-7 text-stone-600 shadow-sm">
-          No saved runs match the selected test case filter.
+          No saved runs match the selected filter.
         </div>
       ) : aggregates.length === 0 ? (
         <div className="rounded-[28px] border border-dashed border-stone-300 bg-[color:var(--card)] p-8 text-sm leading-7 text-stone-600 shadow-sm">
-          No saved scored runs yet. Save a few comparisons with scores and this tab will show cross-run LLM performance.
+          No saved scored runs yet. Save a few comparisons and this tab will show cross-run LLM performance.
         </div>
       ) : (
         <div className="space-y-4">

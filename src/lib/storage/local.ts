@@ -1,6 +1,7 @@
 import { defaultMetrics, defaultModels } from "@/lib/constants/default-models";
 import { createEmptyKnowledgeSourceConfig } from "@/lib/validation/setup";
 import type {
+  JudgeConfig,
   KnowledgeSourceConfig,
   MetricConfig,
   ModelConfig,
@@ -13,6 +14,7 @@ export const STORAGE_KEYS = {
   models: "llm-comparator.models",
   selectedMetrics: "llm-comparator.selected-metrics",
   knowledgeSource: "llm-comparator.knowledge-source",
+  judgeConfig: "llm-comparator.judge-config",
   onboardingComplete: "llm-comparator.onboarding-complete",
   workspacePrefs: "llm-comparator.workspace-prefs",
 } as const;
@@ -21,6 +23,14 @@ type ProviderKeyMap = Partial<Record<ProviderType, ProviderConfig>>;
 
 const LEGACY_GEMINI_DEFAULT_ID = "or-gemini-2-flash-exp";
 const CURRENT_GEMINI_DEFAULT_ID = "or-gemini-3-flash-preview";
+const DEFAULT_JUDGE_CONFIG: JudgeConfig = {
+  provider: "openrouter",
+  modelId: "openai/gpt-4o-mini",
+  displayName: "GPT-4o mini judge",
+  enabled: false,
+  systemPromptTemplate:
+    "You are a strict LLM evaluation judge. Score the response against the provided evaluation metrics, using any case-specific rubric or reference answer only as additional guidance. Return valid JSON only in the requested schema.",
+};
 
 function isBrowser() {
   return typeof window !== "undefined";
@@ -170,5 +180,32 @@ export const localStore = {
     }
 
     writeJson(STORAGE_KEYS.knowledgeSource, normalizeKnowledgeSource(knowledgeSource));
+  },
+  getJudgeConfig(): JudgeConfig {
+    const savedJudgeConfig = readJson<Partial<JudgeConfig>>(STORAGE_KEYS.judgeConfig, {});
+    return {
+      ...DEFAULT_JUDGE_CONFIG,
+      ...savedJudgeConfig,
+      provider:
+        savedJudgeConfig.provider === "nvidia-nim" || savedJudgeConfig.provider === "openrouter"
+          ? savedJudgeConfig.provider
+          : DEFAULT_JUDGE_CONFIG.provider,
+      modelId:
+        typeof savedJudgeConfig.modelId === "string" && savedJudgeConfig.modelId.trim()
+          ? savedJudgeConfig.modelId.trim()
+          : DEFAULT_JUDGE_CONFIG.modelId,
+      displayName:
+        typeof savedJudgeConfig.displayName === "string" && savedJudgeConfig.displayName.trim()
+          ? savedJudgeConfig.displayName.trim()
+          : DEFAULT_JUDGE_CONFIG.displayName,
+      enabled: Boolean(savedJudgeConfig.enabled),
+      systemPromptTemplate:
+        typeof savedJudgeConfig.systemPromptTemplate === "string"
+          ? savedJudgeConfig.systemPromptTemplate
+          : DEFAULT_JUDGE_CONFIG.systemPromptTemplate,
+    };
+  },
+  setJudgeConfig(config: JudgeConfig) {
+    writeJson(STORAGE_KEYS.judgeConfig, config);
   },
 };

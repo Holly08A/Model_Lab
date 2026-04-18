@@ -6,6 +6,7 @@ import { defaultMetrics, defaultModels } from "@/lib/constants/default-models";
 import { STORAGE_KEYS, localStore } from "@/lib/storage/local";
 import { validateKnowledgeSourceConfig } from "@/lib/validation/setup";
 import type {
+  JudgeConfig,
   KnowledgeSourceConfig,
   MetricConfig,
   ModelConfig,
@@ -18,6 +19,7 @@ type SetupStore = SetupState & {
   hydrate: () => void;
   setProviderKey: (provider: ProviderType, apiKey: string) => void;
   setKnowledgeSource: (knowledgeSource: KnowledgeSourceConfig | null) => void;
+  setJudgeConfig: (config: Partial<JudgeConfig>) => void;
   toggleModel: (id: string) => void;
   addCustomModel: (
     model: Omit<ModelConfig, "id" | "createdAt" | "updatedAt" | "enabled" | "isDefault">,
@@ -60,6 +62,7 @@ export const useSetupStore = create<SetupStore>((set, get) => ({
   models: defaultModels,
   selectedMetrics: defaultMetrics,
   knowledgeSource: null,
+  judgeConfig: localStore.getJudgeConfig(),
   onboardingComplete: false,
   hydrate: () => {
     if (get().hydrated || typeof window === "undefined") {
@@ -77,6 +80,7 @@ export const useSetupStore = create<SetupStore>((set, get) => ({
       models: localStore.getModels(),
       selectedMetrics: localStore.getSelectedMetrics(),
       knowledgeSource: localStore.getKnowledgeSource(),
+      judgeConfig: localStore.getJudgeConfig(),
       onboardingComplete: getOnboardingComplete(),
     });
   },
@@ -92,6 +96,15 @@ export const useSetupStore = create<SetupStore>((set, get) => ({
   setKnowledgeSource: (knowledgeSource) => {
     localStore.setKnowledgeSource(knowledgeSource);
     set({ knowledgeSource });
+  },
+  setJudgeConfig: (config) => {
+    const nextConfig = {
+      ...get().judgeConfig,
+      ...config,
+    };
+
+    localStore.setJudgeConfig(nextConfig);
+    set({ judgeConfig: nextConfig });
   },
   toggleModel: (id) => {
     const models = get().models.map((model) =>

@@ -150,7 +150,7 @@ export const defaultMetrics: MetricConfig[] = [
   {
     id: "hallucination-risk",
     key: "hallucination_risk",
-    label: "Hallucination risk",
-    description: "How likely the answer contains unsupported or invented claims.",
+    label: "Low hallucination risk",
+    description: "How safe the answer is from unsupported or invented claims. Higher scores mean lower risk.",
   },
 ];
